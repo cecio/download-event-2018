@@ -24,7 +24,7 @@ ESP8266WebServerSecure serverSecure(443);
 const String HtmlHtml = "<html><head>"
                         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" /></head>";
 const String HtmlHtmlClose = "</html>";
-***REMOVED***
+const String HtmlTitle = "<h1>Keep Calm & Call ServiceDesk: 035112233</h1><br/>\n";
 const String HtmlImage = "<img src=\"data:image/png;base64, \
 iVBORw0KGgoAAAANSUhEUgAAAUoAAABMCAMAAAA82Q6eAAAABGdBTUEAALGPC/xhBQAAAAFzUkdC\
 AK7OHOkAAAX6aVRYdFhNTDpjb20uYWRvYmUueG1wAAAAAAA8P3hwYWNrZXQgYmVnaW49Iu+7vyIg\
