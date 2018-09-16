@@ -94,7 +94,7 @@ const int switch7Pin = 38;
 
 // Step 8 variables
 const int switch8Pin = 40;
-char safeNumber[] = "***REMOVED***";
+char safeNumber[] = "035112233";
 char calledNumber[] = "\0\0\0\0\0\0\0\0\0\0";
 int numberIndex = 0;
 
