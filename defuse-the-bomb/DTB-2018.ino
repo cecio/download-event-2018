@@ -19,7 +19,7 @@
     6: power removed
     7: magnet
 
-   $Id: DTB-2018.ino,v 1.19 2018/09/02 16:05:01 cesare Exp cesare $
+   $Id: DTB-2018.ino,v 1.20 2018/09/16 11:15:44 cesare Exp cesare $
 */
 
 #include "music.h"
@@ -28,7 +28,7 @@
 // Global settings
 //
 int debug = 0;       // NOTE: with debug level > 1, the timing can be impacted; effects on rotary disc and magnet read
-                     //       are expected
+//       are expected
 
 int steps = 7;
 int steps_ok = 0;
@@ -46,6 +46,7 @@ unsigned long maxTime = 300000;   // milliseconds
 
 // Power variables
 const int checkPowerPin = A0;
+const int powerLimit = 850;
 
 // Beep variables
 const int piezoPin = 8;
@@ -75,7 +76,7 @@ const int switch3Pin = 28;
 // Step 4 variables
 const int switch4Pin = 30;
 const int lightSensorPin = A3;
-const int lightLimit = 70;
+const int lightLimit = 100;
 
 // Step 5 variables
 const int magneticSwitchPin = 31;
@@ -103,7 +104,7 @@ const int tilt2Pin = 26;            // Souriau
 const int tilt3Pin = 52;            // MCU
 const int tilt4Pin = 32;            // Autodial
 const int tilt5Pin = 33;            // Autodial
-const int tiltCountMax = 40;
+const int tiltCountMax = 30;
 int tiltCount = 0;
 bool previousTiltStatus = false;
 
@@ -222,7 +223,7 @@ void loop() {
   }
 
   // Check Power Source
-  if ( analogRead(checkPowerPin) < 900 )
+  if ( analogRead(checkPowerPin) < powerLimit )
   {
     boom("Don't touch the power plug", 6);
   }
@@ -239,57 +240,61 @@ void loop() {
   // *** End sensor check sequence ***
 
   // *** Start status sensor checks ***
-  lightStatus = checkLightSensor();        // Part of step 4
-  magneticStatus = checkMagSensor();       // This is step 5
-
-  tiltStatus = checkTiltSensors();
-  generalStatus = checkUnusedSwitches();
-
-  // Check the general bomb status
-  if ( generalStatus == true )
+  if ( action[5] != true )                   // Sensor check is disabled when "Line release" button is pressed
+                                             // This makes the rotary disc dial read more reliable
   {
-    boom("You messed up something", 3);
-  }
+    lightStatus = checkLightSensor();        // Part of step 4
+    magneticStatus = checkMagSensor();       // This is step 5
 
-  // Check the status of the magnetic switch
-  if ( magneticStatus != previousMagStatus )
-  {
-    // If status changes, reset the counter
-    magneticCount = 0;
-  }
-  if ( magneticStatus == true )
-  {
-    magneticCount++;
+    tiltStatus = checkTiltSensors();
+    generalStatus = checkUnusedSwitches();
 
-    if ( magneticCount >= magneticCountMax )
+    // Check the general bomb status
+    if ( generalStatus == true )
     {
-      boom("Be faster with that magnet", 7);
+      boom("You messed up something", 3);
     }
 
-    previousMagStatus = magneticStatus;
-  }
-
-  // Check the tilt sensors
-  if ( tiltStatus != previousTiltStatus )
-  {
-    // If status changes, reset the counter
-    tiltCount = 0;
-  }
-  if ( tiltStatus == true )
-  {
-    tiltCount++;
-    if ( tiltCount >= tiltCountMax )
+    // Check the status of the magnetic switch
+    if ( magneticStatus != previousMagStatus )
     {
-      boom("Be careful, it's a bomb", 4);
+      // If status changes, reset the counter
+      magneticCount = 0;
+    }
+    if ( magneticStatus == true )
+    {
+      magneticCount++;
+
+      if ( magneticCount >= magneticCountMax )
+      {
+        boom("Be faster with that magnet", 7);
+      }
+
+      previousMagStatus = magneticStatus;
     }
 
-    previousTiltStatus = tiltStatus;
-  }
+    // Check the tilt sensors
+    if ( tiltStatus != previousTiltStatus )
+    {
+      // If status changes, reset the counter
+      tiltCount = 0;
+    }
+    if ( tiltStatus == true )
+    {
+      tiltCount++;
+      if ( tiltCount >= tiltCountMax )
+      {
+        boom("Be careful, it's a bomb", 4);
+      }
 
-  // Check the light sensor
-  if (lightStatus == true )
-  {
-    boom("Too much light", 5);
+      previousTiltStatus = tiltStatus;
+    }
+
+    // Check the light sensor
+    if (lightStatus == true )
+    {
+      boom("Too much light", 5);
+    }
   }
   // *** End status sensor checks
 
@@ -467,12 +472,12 @@ bool checkSwitch_step6(void)
 
   if ( switchState == HIGH )
   {
-    digitalWrite(wifiLedPin, LOW);           // Turn off LED
+    digitalWrite(wifiLedPin, LOW);            // Turn off LED
     digitalWrite(wifiBoardPin, HIGH);         // Turn off Wifi board
     return false;
   } else {
     digitalWrite(wifiLedPin, HIGH);          // Turn on LED
-    digitalWrite(wifiBoardPin, LOW);        // Turn on Wifi board
+    digitalWrite(wifiBoardPin, LOW);         // Turn on Wifi board
     return true;
   }
 }
@@ -645,6 +650,9 @@ bool checkUnusedSwitches(void)
   }
 
   // *** Read the status of Souriau Analog Knob 2 ***
+  /*
+   * FIXME: this knob physically broken during the event, I had to disable it
+   * 
   switchState = analogRead(souAnalogKnob2);
   if ( debug >= 2 )
   {
@@ -655,6 +663,7 @@ bool checkUnusedSwitches(void)
   {
     return true;
   }
+  */
 
   // *** Read the status of Autodial unused switches ***
   switchState = digitalRead(autodialUnusedPin);
